@@ -7,8 +7,8 @@ class PostController {
         return await newPost.save();
     }
 
-    async getPosts() {
-        return await Post.find();
+    async getPosts(limit) {
+        return await Post.find().limit(limit);
     }
 
     async getPostById(id) {
@@ -17,7 +17,9 @@ class PostController {
     }
 
     async updatePost(id, data) {
+        console.log("check update data", data);
         const resonse = await Post.updateOne({_id: id}, {$set: data}, { overwrite: true });
+        console.log("check update, ", resonse);
         if (resonse.modifiedCount > 0) {
             return this.getPostById(id);
         }
