@@ -13,7 +13,9 @@ class Authentication {
         const user = await User.findOne({username: data.username}).exec();
         if (user) {
             const result = await bcrypt.compare(data.password, user.password);
-            return result;
+            if (result) {
+                return user;
+            }
         }
 
         return null;
