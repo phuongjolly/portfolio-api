@@ -1,15 +1,20 @@
 const express = require('express')
 const bodyParse = require("body-parser");
 const mongoose = require("mongoose");
-const PostController = require("./controllers/PostController");
-const Authentication = require("./controllers/Authentication");
 const jwt = require("jsonwebtoken");
 const cookieParser = require('cookie-parser');
+const dotenv = require('dotenv');
+const PostController = require("./controllers/PostController");
+const Authentication = require("./controllers/Authentication");
+const S3Controller = require("./controllers/S3Controller");
 
 const app = express()
 const port = 5000;
 const jwtKey = process.env.MY_SECRET_KEY || "phuongjolly_blog";
 const jwtExpirySeconds = 300;
+dotenv.config();
+
+console.log("dotenv", process.env);
 
 app.use(bodyParse.urlencoded({
     extended: true
@@ -46,8 +51,8 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/posts', async (req, res) => {
-    const { title, description, content } = req.body;
-    const response = await PostController.createPost({ title, description, content });
+    const { title, description, content, avatar } = req.body;
+    const response = await PostController.createPost({ title, description, content, avatar });
     res.send(response);
 });
 
@@ -128,6 +133,11 @@ app.post("/api/users/login", async (req, res) => {
 app.get("/api/me", async(req, res) => {
     const { currentUser } = req;
     res.send({ currentUser });
+})
+
+app.post("/api/image/generateUrl", async (req, res) =>{
+    const response = await S3Controller.generateURL();
+    res.send(response);
 })
 
 app.listen(port, () => {
