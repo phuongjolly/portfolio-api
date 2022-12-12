@@ -12,19 +12,12 @@ class PostController {
     }
 
     async getPostById(id) {
-        console.log(id);
         return await Post.findById(id);
     }
 
     async updatePost(id, data) {
-        console.log("check update data", data);
         const resonse = await Post.updateOne({_id: id}, {$set: data}, { overwrite: true });
-        console.log("check update, ", resonse);
-        if (resonse.modifiedCount > 0) {
-            return this.getPostById(id);
-        }
-
-        return null;
+        return this.getPostById(id);
     }
 
     async deletePostById(id) {
