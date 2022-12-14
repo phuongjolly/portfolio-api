@@ -11,7 +11,7 @@ const S3Controller = require("./controllers/S3Controller");
 const app = express()
 const port = 5000;
 const jwtKey = process.env.MY_SECRET_KEY || "phuongjolly_blog";
-const jwtExpirySeconds = 300;
+const jwtExpirySeconds = 30 * 24 * 60 * 60;
 dotenv.config();
 
 console.log("dotenv", process.env);
@@ -31,14 +31,13 @@ const authenticate = (req, res, next) => {
     const { token } = req.cookies;
 
     if (token) {
-        let payload;
         try {
-            payload = jwt.verify(token, jwtKey);
+            const payload = jwt.verify(token, jwtKey);
+            req.currentUser = payload.username;
+
         } catch (e) {
            console.log(e);
         }
-        console.log("current user", payload.username);
-        req.currentUser = payload.username;
     }
 
     next();
@@ -51,18 +50,27 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/posts', async (req, res) => {
-    const { title, description, content, avatar } = req.body;
-    const response = await PostController.createPost({ title, description, content, avatar });
-    res.send(response);
+    const { currentUser } = req;
+    if (!currentUser) {
+        res.send(403);
+    } else {
+        const { title, description, content, avatar } = req.body;
+        const response = await PostController.createPost({ title, description, content, avatar });
+        res.send(response);
+    }
 });
 
 app.put('/api/posts/:id', async (req, res) => {
-    const { id } = req.params;
-    const data = req.body;
+    const { currentUser } = req;
+    if (!currentUser) {
+        res.send(403);
+    } else {
+        const {id} = req.params;
+        const data = req.body;
 
-    console.log("check data", data);
-   const response = await PostController.updatePost(id, data);
-    res.send(response);
+        const response = await PostController.updatePost(id, data);
+        res.send(response);
+    }
 })
 
 app.get('/api/posts',async (req, res) => {
@@ -110,11 +118,7 @@ app.post("/api/users", async (req, res) => {
 
 app.post("/api/users/login", async (req, res) => {
     const { username, password } = req.body;
-    console.log("loging", username, password);
-
     const user = await Authentication.login({ username, password });
-
-    console.log("user", user);
 
     if (!user) {
         res.send(401);
@@ -125,7 +129,7 @@ app.post("/api/users/login", async (req, res) => {
         expiresIn: jwtExpirySeconds,
     });
 
-    console.log(token);
+
     res.cookie("token", token, { maxAge: jwtExpirySeconds * 1000 });
     res.send(user);
 });
@@ -138,7 +142,7 @@ app.get("/api/me", async(req, res) => {
 app.post("/api/image/generateUrl", async (req, res) =>{
     const response = await S3Controller.generateURL();
     res.send(response);
-})
+});
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
