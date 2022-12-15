@@ -88,11 +88,13 @@ app.get('/api/posts',async (req, res) => {
 
 app.get('/api/posts/:id', async (req, res) => {
     const {id} = req.params;
-    const response = await PostController.getPostById(id);
-    if (!response) {
+    const post = await PostController.getPostById(id);
+    const nextId = await PostController.getNextPost(post._id);
+    const previousId = await PostController.getPreviousPost(post._id);
+    if (!post) {
         res.send(404, "Not Found");
     } else {
-        res.send(response);
+        res.send({...post.toObject(), nextId, previousId} );
     }
 });
 

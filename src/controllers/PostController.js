@@ -15,6 +15,16 @@ class PostController {
         return await Post.findById(id);
     }
 
+    async getNextPost(id) {
+        const post = await Post.findOne({ _id: { $gt: id}}).sort({_id: 1});
+        return post?._id;
+    }
+
+    async getPreviousPost(id) {
+        const post = await Post.findOne({ _id: { $lt: id}}).sort({_id: -1});
+        return post?._id;
+    }
+
     async updatePost(id, data) {
         const resonse = await Post.updateOne({_id: id}, {$set: data}, { overwrite: true });
         return this.getPostById(id);
